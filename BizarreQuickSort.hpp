@@ -22,7 +22,12 @@ void insertionSort(BidirRange&& range, Comparer cmp = {})
         auto pos = curr;
         while (pos != begin) {
             const auto posPrev = std::ranges::prev(pos);
-            if (cmp(tmp, *posPrev) >= 0) {
+            const auto cmpResult = cmp(tmp, *posPrev);
+            if constexpr (std::same_as<std::partial_ordering, decltype(cmpResult)>) {
+                assert(cmpResult != std::partial_ordering::unordered);
+            }
+
+            if (cmpResult >= 0) {
                 break;
             }
 
@@ -62,6 +67,10 @@ auto bizarrePartition(RandomRange&& range, Comparer cmp = {})
     auto [left, right] = std::ranges::subrange(range);
     for (auto it = left + 1; it != right; /*empty*/) {
         const auto cmpResult = cmp(*it, *left);
+        if constexpr (std::same_as<std::partial_ordering, decltype(cmpResult)>) {
+            assert(cmpResult != std::partial_ordering::unordered);
+        }
+
         if (cmpResult < 0) { // less than
             swap(*it, *left);
 
